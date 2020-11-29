@@ -2,6 +2,8 @@
 pub const GAME_WIDTH: f32 = 360.0;
 pub const GAME_HEIGHT: f32 = 270.0;
 
+// TODO: Refractor all constants to this file
+
 // gamemaster
 pub const STARTING_TICK: usize = 0;
 pub const STARTING_PHASE_IDX: usize = 0;

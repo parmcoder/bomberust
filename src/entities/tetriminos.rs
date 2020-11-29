@@ -10,6 +10,7 @@ use rand::{
 };
 
 use crate::entities::position::Position;
+use amethyst::core::ecs::rayon::iter::{IntoParallelIterator, IntoParallelRefMutIterator};
 
 pub struct Block {
     pub block_type: BlockType,
@@ -24,23 +25,24 @@ impl Block {
         }
     }
 
-    pub fn rotate_left(&mut self) {
+    pub fn rotate_cw(&mut self) {
         self.rotation = (self.rotation + 1) % 4;
     }
 
-    pub fn get_filled_positions(&self, pos: &Position) -> Vec<Position> {
+    pub fn rotate_ccw(&mut self) {
+        self.rotation = (self.rotation - 1) % 4;
+    }
+
+    pub fn get_filled_positions(&self, pos: &(u32, u32)) -> Vec<(u32, u32)> {
         let mut positions = Vec::new();
         let shape: BlockShape = self.block_type.get_shape(self.rotation);
-        for row in 0..4 {
-            for col in 0..4 {
+        (0..4).par_iter_mut().for_each(|row| {
+            (0..4).par_iter_mut().for_each(|col| {
                 if (shape & (1 << (row * 4 + col))) != 0 {
-                    positions.push(Position {
-                        row: pos.row + (3 - row),
-                        col: pos.col + col,
-                    });
+                    positions.push((pos.row + 3 - row, pos.col + col))
                 }
-            }
-        }
+            })
+        });
         positions
     }
 }
@@ -65,7 +67,6 @@ type BlockShape = u16;
 
 impl BlockType {
     pub fn get_shape(&self, rotation: u8) -> BlockShape {
-        // TODO: Move to config file (RON)
         let shapes = match *self {
             BlockType::O => [0xCC00, 0xCC00, 0xCC00, 0xCC00],
             BlockType::J => [0x44C0, 0x8E00, 0x6440, 0x0E20],

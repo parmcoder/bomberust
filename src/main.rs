@@ -12,6 +12,12 @@ use amethyst::{
 };
 
 mod state;
+mod audio;
+mod constants;
+mod entities;
+mod events;
+mod resources;
+mod systems;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
