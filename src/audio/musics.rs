@@ -5,6 +5,8 @@ use amethyst::{
 };
 use amethyst::audio::OggFormat;
 use std::{iter::Cycle, vec::IntoIter};
+use crate::audio::sounds::Sounds;
+use crate::constants::{MUSIC_TRACKS, DROP_SOUND};
 
 
 pub struct Music {
@@ -32,8 +34,8 @@ pub fn initialise_audio(world: &mut World) {
             .cycle();
         let music = Music { music };
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
-            score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
+            bounce_sfx: load_audio_track(&loader, &world, DROP_SOUND),
+            score_sfx: load_audio_track(&loader, &world, DROP_SOUND),
         };
 
         (sound, music)

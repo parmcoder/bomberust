@@ -133,14 +133,14 @@ impl<'s> System<'s> for BlockInputSystem {
                 col: position.col - movement as i8,
             };
 
-            let mut new_block = Block {
-                block_type: block.block_type,
+            let mut new_block = Piece {
+                piece_type: block.piece_type,
                 rotation: block.rotation,
             };
 
             let rotated = self.action_no_spam(&*input, &"rotate".to_string());
             if rotated {
-                new_block.rotate_left();
+                new_block.rotate_cw();
             } else if movement == 0.0 && !soft_drop {
                 continue;
             }

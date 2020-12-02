@@ -1,4 +1,4 @@
-use crate::entities::{Block, DeadBlock, Position, Piece};
+use crate::entities::{Position, Piece};
 
 use amethyst::assets::Handle;
 use amethyst::core::ecs::{Component, DenseVecStorage, Entities, ReadExpect};
@@ -92,7 +92,7 @@ impl<'s> System<'s> for RenderSystem {
                     0.0,
                 );
 
-                let tint = Tint(block.block_type.get_color());
+                let tint = Tint(block.piece_type.get_color());
 
                 entities
                     .build_entity()

@@ -1,5 +1,5 @@
 use crate::entities::{DroppedPiece, Piece, Position};
-use crate::events::ResetFallTimerEvent;
+use crate::events::{ResetFallTimerEvent, BlockLandEvent};
 use amethyst::assets::Handle;
 use amethyst::core::ecs::{
     Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
@@ -8,9 +8,12 @@ use amethyst::core::{Time, Transform};
 use amethyst::renderer::resources::Tint;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
 
+use amethyst::core::math::Vector3;
+use amethyst::core::ecs::shrev::EventChannel;
+
 const FALL_TIMER: f32 = 0.4;
 
-#[derive(SystemDesc)]
+// #[derive(SystemDesc)]
 pub struct DroppingSystem {
     fall_timer: f32, // Seconds until next step down
     reader_id: Option<ReaderId<ResetFallTimerEvent>>,
@@ -24,8 +27,8 @@ impl<'s> System<'s> for DroppingSystem {
         WriteStorage<'s, Transform>,
         Read<'s, Time>,
         Entities<'s>,
-        // Write<'s, EventChannel<BlockLandEvent>>,
-        // Write<'s, EventChannel<ResetFallTimerEvent>>,
+        Write<'s, EventChannel<BlockLandEvent>>,
+        Write<'s, EventChannel<ResetFallTimerEvent>>,
         WriteStorage<'s, SpriteRender>,
         ReadExpect<'s, Handle<SpriteSheet>>,
         WriteStorage<'s, Tint>,
@@ -40,8 +43,8 @@ impl<'s> System<'s> for DroppingSystem {
             mut transforms,
             time,
             entities,
-            // mut land_channel,
-            // mut reset_channel,
+            mut land_channel,
+            mut reset_channel,
             mut sprite_renders,
             sprite_sheet_handle,
             mut tints,
@@ -65,7 +68,7 @@ impl<'s> System<'s> for DroppingSystem {
                 .map(|(_, pos)| *pos)
                 .collect::<Vec<_>>();
 
-            let mut new_dead_blocks = Vec::<(DeadBlock, Position)>::new();
+            let mut new_dead_blocks = Vec::<(DroppedPiece, Position)>::new();
 
             //make them functional
 
@@ -92,7 +95,7 @@ impl<'s> System<'s> for DroppingSystem {
 
                 if collide {
                     for new_dead_pos in block.get_filled_positions(position) {
-                        new_dead_blocks.push((DeadBlock::new(block.block_type), new_dead_pos));
+                        new_dead_blocks.push((DroppedPiece::new(block.piece_type), new_dead_pos));
                     }
                     entities.delete(entity).unwrap();
 
@@ -116,7 +119,7 @@ impl<'s> System<'s> for DroppingSystem {
                     0.0,
                 );
 
-                let tint = Tint(new_dead_block.block_type.get_color());
+                let tint = Tint(new_dead_block.piece_type.get_color());
 
                 entities
                     .build_entity()
