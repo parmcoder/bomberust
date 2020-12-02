@@ -29,7 +29,12 @@ impl Piece {
     }
 
     pub fn rotate_ccw(&mut self) {
-        self.rotation = (self.rotation - 1) % 4;
+        // println!("{}",self.rotation);
+        if self.rotation == 0u8 {
+            self.rotation = (u8::MAX) % 4;
+        } else {
+            self.rotation = (self.rotation - 1) % 4;
+        }
     }
 
     pub fn get_filled_positions(&self, pos: &Position) -> Vec<Position> {

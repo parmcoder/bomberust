@@ -31,7 +31,7 @@ impl SimpleState for GameState {
         world
             .create_entity()
             .with(b)
-            .with(Position { row: 11, col: 3 })
+            .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 })
             .build();
 
         // Setup debug lines as a component and add lines to render axes & grid

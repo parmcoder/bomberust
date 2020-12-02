@@ -109,7 +109,7 @@ impl<'s> System<'s> for DroppingSystem {
                     }
                     entities.delete(entity).unwrap();
 
-                // land_channel.single_write(BlockLandEvent {});
+                land_channel.single_write(PieceLandEvent {});
                 } else {
                     position.row -= 1;
                 }
