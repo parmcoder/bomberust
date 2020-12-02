@@ -4,25 +4,22 @@ use amethyst::{
     renderer::palette::rgb::Srgba,
 };
 
-use rand::{
-    distributions::{Distribution, Standard},
-    Rng,
-};
-
-use crate::entities::position::Position;
 use amethyst::core::ecs::rayon::iter::{IntoParallelIterator, IntoParallelRefMutIterator};
+use rand::prelude::Distribution;
+use rand::distributions::Standard;
+use rand::Rng;
 
 //Normal Piece
 
 pub struct Piece {
-    pub block_type: PieceType,
+    pub piece_type: PieceType,
     pub rotation: u8,
 }
 
 impl Piece {
-    pub fn new(block_type: PieceType) -> Self {
+    pub fn new(piece_type: PieceType) -> Self {
         Self {
-            block_type,
+            piece_type,
             rotation: 0,
         }
     }
@@ -37,17 +34,17 @@ impl Piece {
 
     pub fn get_filled_positions(&self, pos: &Position) -> Vec<Position> {
         let mut positions = Vec::new();
-        let shape: PieceShape = self.block_type.get_shape(self.rotation);
-        (0..4).par_iter_mut().for_each(|row| {
-            (0..4).par_iter_mut().for_each(|col| {
+        let shape: PieceShape = self.piece_type.get_shape(self.rotation);
+        for row in 0..4 {
+            for col in 0..4 {
                 if (shape & (1 << (row * 4 + col))) != 0 {
                     positions.push(Position {
                         row: pos.row + (3 - row),
                         col: pos.col + col,
-                    })
+                    });
                 }
-            })
-        });
+            }
+        }
         positions
     }
 }
@@ -113,7 +110,7 @@ impl Distribution<PieceType> for Standard {
 
 // Dropped Piece
 pub struct DroppedPiece {
-    pub block_type: BlockType,
+    pub piece_type: PieceType,
 }
 
 impl Component for DroppedPiece {
@@ -121,16 +118,19 @@ impl Component for DroppedPiece {
 }
 
 impl DroppedPiece {
-    pub fn new(block_type: BlockType) -> Self {
-        Self { block_type }
+    pub fn new(piece_type: PieceType) -> Self {
+        Self { piece_type }
     }
 }
 
 // Track Positions, we see them as an object not matrix
-#[derive(Component, Clone, Copy, Debug, Eq, PartialEq)]
-#[storage(VecStorage)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Position {
     pub row: i8,
     pub col: i8,
+}
+
+impl Component for Position {
+    type Storage = DenseVecStorage<Self>;
 }
 

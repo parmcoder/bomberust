@@ -12,6 +12,72 @@ use amethyst::{
 };
 
 use log::info;
+use crate::entities::{Position, Piece, PieceType};
+use amethyst::renderer::debug_drawing::DebugLinesComponent;
+use amethyst::core::ecs::shrev::EventChannel;
+use crate::events::PieceLandEvent;
+use crate::constants::{BOARD_WIDTH, BOARD_HEIGHT};
+
+
+#[derive(Default)]
+pub struct GameState;
+
+impl SimpleState for GameState {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        let StateData { world, .. } = data;
+
+        let mut b = Piece::new(PieceType::I);
+        b.rotation = 3;
+        world
+            .create_entity()
+            .with(b)
+            .with(Position { row: 11, col: 3 })
+            .build();
+
+        // Setup debug lines as a component and add lines to render axes & grid
+        let debug_lines_component = DebugLinesComponent::new();
+        world.register::<DebugLinesComponent>();
+        world.create_entity().with(debug_lines_component).build();
+
+        let mut land_channel = EventChannel::<PieceLandEvent>::new();
+        land_channel.single_write(PieceLandEvent {});
+        world.insert(land_channel);
+
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5, BOARD_HEIGHT as f32 * 0.5, 1.0);
+        world
+            .create_entity()
+            .with(Camera::standard_2d(BOARD_WIDTH as f32, BOARD_HEIGHT as f32))
+            .with(transform)
+            .build();
+
+        let texture_handle = {
+            let loader = world.read_resource::<Loader>();
+            loader.load(
+                "sprites/tetriminos/tetris_block.png",
+                ImageFormat::default(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            )
+        };
+
+        let spritesheet_handle = {
+            let loader = world.read_resource::<Loader>();
+            loader.load(
+                "sprites/tetriminos/sprites.ron",
+                SpriteSheetFormat(texture_handle),
+                (),
+                &world.read_resource::<AssetStorage<SpriteSheet>>(),
+            )
+        };
+
+        world.insert(spritesheet_handle);
+    }
+
+    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        Trans::None
+    }
+}
 
 /// A dummy game state that shows 3 sprites.
 pub struct MyState;

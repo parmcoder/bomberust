@@ -10,28 +10,28 @@ use amethyst::{
 use amethyst::core::Transform;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use crate::events::BlockLandEvent;
+use crate::events::PieceLandEvent;
 use crate::entities::{Position, DroppedPiece};
 use crate::constants::BOARD_WIDTH;
 
 #[derive(SystemDesc)]
-pub struct LineDestroySystem {
-    reader_id: Option<ReaderId<BlockLandEvent>>,
+pub struct LineClearSystem {
+    reader_id: Option<ReaderId<PieceLandEvent>>,
 }
 
-impl LineDestroySystem {
+impl LineClearSystem {
     pub fn new() -> Self {
         Self { reader_id: None }
     }
 }
 
-impl<'s> System<'s> for LineDestroySystem {
+impl<'s> System<'s> for LineClearSystem {
     type SystemData = (
         WriteStorage<'s, DroppedPiece>,
         WriteStorage<'s, Position>,
         WriteStorage<'s, Transform>,
         Entities<'s>,
-        Write<'s, EventChannel<BlockLandEvent>>,
+        Write<'s, EventChannel<PieceLandEvent>>,
     );
 
     fn run(

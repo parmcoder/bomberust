@@ -14,12 +14,12 @@ use crate::entities::{Piece, Position, DroppedPiece};
 use crate::constants::BOARD_WIDTH;
 
 #[derive(SystemDesc)]
-pub struct BlockInputSystem {
+pub struct PieceInputSystem {
     last_actions: HashSet<String>,
     action_timers: HashMap<String, f32>,
 }
 
-impl BlockInputSystem {
+impl PieceInputSystem {
     pub fn new() -> Self {
         Self {
             last_actions: HashSet::new(),
@@ -97,7 +97,7 @@ impl BlockInputSystem {
     }
 }
 
-impl<'s> System<'s> for BlockInputSystem {
+impl<'s> System<'s> for PieceInputSystem {
     type SystemData = (
         WriteStorage<'s, Piece>,
         WriteStorage<'s, DroppedPiece>,
@@ -117,30 +117,37 @@ impl<'s> System<'s> for BlockInputSystem {
             .collect::<Vec<_>>();
 
         'block_loop: for (block, position) in (&mut piece, &mut positions).join() {
-            if self.action_no_spam(&*input, &"hard_drop".to_string()) {
+            if self.action_no_spam(&*input, &"drop_hard".to_string()) {
                 Self::hard_drop(block, position, &dead_positions);
             }
 
-            let movement_input = input.axis_value("horizontal").unwrap_or(0.0);
-            let movement = self.action_with_timer(&*time, 0.14, "horizontal", movement_input, 0.0);
+            let movement_input = input.axis_value("move_x").unwrap_or(0.0);
+            let movement = self.action_with_timer(&*time, 0.14, "move_x", movement_input, 0.0);
 
-            let soft_drop_input = input.action_is_down("soft_drop").unwrap_or(false);
+            let soft_drop_input = input.action_is_down("drop_soft").unwrap_or(false);
             let soft_drop =
-                self.action_with_timer(&*time, 0.14, "soft_drop", soft_drop_input, false);
+                self.action_with_timer(&*time, 0.14, "drop_soft", soft_drop_input, false);
 
             let new_position = Position {
                 row: position.row - soft_drop as i8,
                 col: position.col - movement as i8,
             };
 
-            let mut new_block = Block {
-                block_type: block.block_type,
+            let mut new_block = Piece {
+                piece_type: block.piece_type,
                 rotation: block.rotation,
             };
 
-            let rotated = self.action_no_spam(&*input, &"rotate".to_string());
+            let rotated = self.action_no_spam(&*input, &"rotate_cw".to_string());
             if rotated {
-                new_block.rotate_left();
+                new_block.rotate_cw();
+            } else if movement == 0.0 && !soft_drop {
+                continue;
+            }
+
+            let rotatedCCW = self.action_no_spam(&*input, &"rotate_ccw".to_string());
+            if rotated {
+                new_block.rotate_ccw();
             } else if movement == 0.0 && !soft_drop {
                 continue;
             }
