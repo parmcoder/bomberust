@@ -9,23 +9,23 @@ use amethyst::{
 
 
 use crate::entities::{Piece, Position};
-use crate::events::BlockLandEvent;
+use crate::events::PieceLandEvent;
 
 #[derive(SystemDesc)]
-pub struct BlockSpawnSystem {
-    reader_id: Option<ReaderId<BlockLandEvent>>,
+pub struct PieceSpawnSystem {
+    reader_id: Option<ReaderId<PieceLandEvent>>,
 }
 
-impl BlockSpawnSystem {
+impl PieceSpawnSystem {
     pub fn new() -> Self {
         Self { reader_id: None }
     }
 }
 
-impl<'s> System<'s> for BlockSpawnSystem {
+impl<'s> System<'s> for PieceSpawnSystem {
     type SystemData = (
         WriteStorage<'s, Piece>,
-        Write<'s, EventChannel<BlockLandEvent>>,
+        Write<'s, EventChannel<PieceLandEvent>>,
         WriteStorage<'s, Position>,
         Entities<'s>,
     );

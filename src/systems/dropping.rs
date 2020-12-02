@@ -1,9 +1,11 @@
 use crate::entities::{DroppedPiece, Piece, Position};
-use crate::events::{ResetFallTimerEvent, BlockLandEvent};
+use crate::events::{ResetFallTimerEvent, PieceLandEvent};
 use amethyst::assets::Handle;
 use amethyst::core::ecs::{
     Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
 };
+use amethyst::derive::SystemDesc;
+
 use amethyst::core::{Time, Transform};
 use amethyst::renderer::resources::Tint;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
@@ -19,6 +21,14 @@ pub struct DroppingSystem {
     reader_id: Option<ReaderId<ResetFallTimerEvent>>,
 }
 
+impl DroppingSystem {
+    pub fn new() -> Self {
+        Self {
+            fall_timer: FALL_TIMER,
+            reader_id: None,
+        }
+    }
+}
 impl<'s> System<'s> for DroppingSystem {
     type SystemData = (
         ReadStorage<'s, Piece>,
@@ -27,7 +37,7 @@ impl<'s> System<'s> for DroppingSystem {
         WriteStorage<'s, Transform>,
         Read<'s, Time>,
         Entities<'s>,
-        Write<'s, EventChannel<BlockLandEvent>>,
+        Write<'s, EventChannel<PieceLandEvent>>,
         Write<'s, EventChannel<ResetFallTimerEvent>>,
         WriteStorage<'s, SpriteRender>,
         ReadExpect<'s, Handle<SpriteSheet>>,

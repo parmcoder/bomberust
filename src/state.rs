@@ -15,7 +15,7 @@ use log::info;
 use crate::entities::{Position, Piece, PieceType};
 use amethyst::renderer::debug_drawing::DebugLinesComponent;
 use amethyst::core::ecs::shrev::EventChannel;
-use crate::events::BlockLandEvent;
+use crate::events::PieceLandEvent;
 use crate::constants::{BOARD_WIDTH, BOARD_HEIGHT};
 
 
@@ -39,8 +39,8 @@ impl SimpleState for GameState {
         world.register::<DebugLinesComponent>();
         world.create_entity().with(debug_lines_component).build();
 
-        let mut land_channel = EventChannel::<BlockLandEvent>::new();
-        land_channel.single_write(BlockLandEvent {});
+        let mut land_channel = EventChannel::<PieceLandEvent>::new();
+        land_channel.single_write(PieceLandEvent {});
         world.insert(land_channel);
 
         let mut transform = Transform::default();
@@ -54,7 +54,7 @@ impl SimpleState for GameState {
         let texture_handle = {
             let loader = world.read_resource::<Loader>();
             loader.load(
-                "tetris_block.png",
+                "sprites/tetriminos/tetris_block.png",
                 ImageFormat::default(),
                 (),
                 &world.read_resource::<AssetStorage<Texture>>(),
@@ -64,7 +64,7 @@ impl SimpleState for GameState {
         let spritesheet_handle = {
             let loader = world.read_resource::<Loader>();
             loader.load(
-                "sprites.ron",
+                "sprites/tetriminos/sprites.ron",
                 SpriteSheetFormat(texture_handle),
                 (),
                 &world.read_resource::<AssetStorage<SpriteSheet>>(),

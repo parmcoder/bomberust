@@ -1,3 +1,3 @@
 mod events;
 
-pub use self::{events::BlockLandEvent, events::ResetFallTimerEvent};
+pub use self::{events::PieceLandEvent, events::ResetFallTimerEvent};
