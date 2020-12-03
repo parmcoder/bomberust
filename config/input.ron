@@ -1,19 +1,15 @@
 (
     axes: {
         "move_x": Emulated(
-            pos: Key(D),
-            neg: Key(A),
-        ),
-        "move_y": Emulated(
-            pos: Key(E),
-            neg: Key(Q),
-        ),
-        "move_z": Emulated(
-            pos: Key(S),
-            neg: Key(W),
+            neg: Key(D),
+            pos: Key(A),
         ),
     },
     actions: {
-
+        "drop_soft": [[Key(S)]],
+        "drop_hard": [[Key(W)]],
+        "rotate_ccw": [[Key(K)]],
+        "rotate_cw": [[Key(J)]],
+        "swap": [[Key(L)]],
     },
 )

@@ -10,8 +10,19 @@ use amethyst::{
     ui::{RenderUi, UiBundle},
     utils::application_root_dir,
 };
+use amethyst::renderer::RenderDebugLines;
 
 mod state;
+mod audio;
+mod constants;
+mod entities;
+mod events;
+mod resources;
+mod systems;
+
+use crate::{
+    systems::{RenderSystem, PieceSpawnSystem, PieceInputSystem, LineClearSystem, DroppingSystem}
+};
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -27,7 +38,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -35,10 +46,22 @@ fn main() -> amethyst::Result<()> {
                         .with_clear([0.34, 0.36, 0.52, 1.0]),
                 )
                 .with_plugin(RenderUi::default())
-                .with_plugin(RenderFlat2D::default()),
-        )?;
+                .with_plugin(RenderFlat2D::default())
+                .with_plugin(RenderDebugLines::default()),
 
-    let mut game = Application::new(resources, state::MyState, game_data)?;
+        )?.with_bundle(UiBundle::<StringBindings>::new())?
+        .with(
+            PieceInputSystem::new(),
+            "piece_input_system",
+            &["input_system"],
+        )
+        .with(DroppingSystem::new(), "piece_drop_system", &[])
+        .with(PieceSpawnSystem::new(), "piece_spawn_system", &[])
+        .with(LineClearSystem::new(), "line_clear_system", &[])
+        .with(RenderSystem, "render_system", &[]);
+
+    // let mut game = Application::new(resources, state::MyState, game_data)?;
+    let mut game = Application::new(resources, state::GameState, game_data)?;
     game.run();
 
     Ok(())

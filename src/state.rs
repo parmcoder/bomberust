@@ -12,8 +12,77 @@ use amethyst::{
 };
 
 use log::info;
+use crate::entities::{Position, Piece, PieceType};
+use amethyst::renderer::debug_drawing::DebugLinesComponent;
+use amethyst::core::ecs::shrev::EventChannel;
+use crate::events::PieceLandEvent;
+use crate::constants::{BOARD_WIDTH, BOARD_HEIGHT};
+
+
+#[derive(Default)]
+pub struct GameState;
+
+impl SimpleState for GameState {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        Trans::Push(Box::new(MyState));
+
+        let StateData { world, .. } = data;
+
+        let mut b = Piece::new(PieceType::I);
+        b.rotation = 3;
+        world
+            .create_entity()
+            .with(b)
+            .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 })
+            .build();
+
+        // Setup debug lines as a component and add lines to render axes & grid
+        let debug_lines_component = DebugLinesComponent::new();
+        world.register::<DebugLinesComponent>();
+        world.create_entity().with(debug_lines_component).build();
+
+        let mut land_channel = EventChannel::<PieceLandEvent>::new();
+        land_channel.single_write(PieceLandEvent {});
+        world.insert(land_channel);
+
+        let mut transform = Transform::default();
+        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5, BOARD_HEIGHT as f32 * 0.5, 1.0);
+        world
+            .create_entity()
+            .with(Camera::standard_2d(BOARD_WIDTH as f32, BOARD_HEIGHT as f32))
+            .with(transform)
+            .build();
+
+        let texture_handle = {
+            let loader = world.read_resource::<Loader>();
+            loader.load(
+                "sprites/tetriminos/tetris_block.png",
+                ImageFormat::default(),
+                (),
+                &world.read_resource::<AssetStorage<Texture>>(),
+            )
+        };
+
+        let spritesheet_handle = {
+            let loader = world.read_resource::<Loader>();
+            loader.load(
+                "sprites/tetriminos/sprites.ron",
+                SpriteSheetFormat(texture_handle),
+                (),
+                &world.read_resource::<AssetStorage<SpriteSheet>>(),
+            )
+        };
+
+        world.insert(spritesheet_handle);
+    }
+
+    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        Trans::None
+    }
+}
 
 /// A dummy game state that shows 3 sprites.
+#[derive(Default)]
 pub struct MyState;
 
 impl SimpleState for MyState {
@@ -55,6 +124,11 @@ impl SimpleState for MyState {
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
+
+            if is_key_down(&event, VirtualKeyCode::L){
+                Trans::Push(Box::new(GameState));
+            }
+
             // Check if the window should be closed
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
@@ -102,7 +176,7 @@ fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
-            "sprites/logo.png",
+            "sprites/imported/logo.png",
             ImageFormat::default(),
             (),
             &texture_storage,
@@ -115,7 +189,7 @@ fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
         let loader = world.read_resource::<Loader>();
         let sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
         loader.load(
-            "sprites/logo.ron",
+            "sprites/imported/logo.ron",
             SpriteSheetFormat(texture_handle),
             (),
             &sheet_storage,
@@ -125,7 +199,7 @@ fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
     // Create our sprite renders. Each will have a handle to the texture
     // that it renders from. The handle is safe to clone, since it just
     // references the asset.
-    (0..3)
+    (0..1)
         .map(|i| SpriteRender {
             sprite_sheet: sheet_handle.clone(),
             sprite_number: i,
@@ -199,7 +273,7 @@ pub fn create_ui_example(world: &mut World) {
         ))
         .with(UiText::new(
             font,
-            "Hello, Amethyst UI!".to_string(),
+            "Rustris!".to_string(),
             [1., 1., 1., 1.],
             30.,
             LineMode::Single,
