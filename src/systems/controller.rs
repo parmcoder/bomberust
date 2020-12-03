@@ -139,14 +139,11 @@ impl<'s> System<'s> for PieceInputSystem {
             };
 
             let rotated = self.action_no_spam(&*input, &"rotate_cw".to_string());
+            let rotatedCCW = self.action_no_spam(&*input, &"rotate_ccw".to_string());
+
             if rotated {
                 new_block.rotate_cw();
-            } else if movement == 0.0 && !soft_drop {
-                continue;
-            }
-
-            let rotatedCCW = self.action_no_spam(&*input, &"rotate_ccw".to_string());
-            if rotated {
+            } else if rotatedCCW {
                 new_block.rotate_ccw();
             } else if movement == 0.0 && !soft_drop {
                 continue;

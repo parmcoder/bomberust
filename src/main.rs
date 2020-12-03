@@ -38,7 +38,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(
             InputBundle::<StringBindings>::new().with_bindings_from_file(&key_bindings_path)?,
         )?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+
         .with_bundle(
             RenderingBundle::<DefaultBackend>::new()
                 .with_plugin(
@@ -49,7 +49,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderDebugLines::default()),
 
-        )?
+        )?.with_bundle(UiBundle::<StringBindings>::new())?
         .with(
             PieceInputSystem::new(),
             "piece_input_system",
@@ -60,6 +60,7 @@ fn main() -> amethyst::Result<()> {
         .with(LineClearSystem::new(), "line_clear_system", &[])
         .with(RenderSystem, "render_system", &[]);
 
+    // let mut game = Application::new(resources, state::MyState, game_data)?;
     let mut game = Application::new(resources, state::GameState, game_data)?;
     game.run();
 

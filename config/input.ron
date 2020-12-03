@@ -1,8 +1,8 @@
 (
     axes: {
         "move_x": Emulated(
-            pos: Key(D),
-            neg: Key(A),
+            neg: Key(D),
+            pos: Key(A),
         ),
     },
     actions: {

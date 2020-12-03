@@ -24,6 +24,8 @@ pub struct GameState;
 
 impl SimpleState for GameState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        Trans::Push(Box::new(MyState));
+
         let StateData { world, .. } = data;
 
         let mut b = Piece::new(PieceType::I);
@@ -31,7 +33,7 @@ impl SimpleState for GameState {
         world
             .create_entity()
             .with(b)
-            .with(Position { row: 11, col: 3 })
+            .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 })
             .build();
 
         // Setup debug lines as a component and add lines to render axes & grid
@@ -80,6 +82,7 @@ impl SimpleState for GameState {
 }
 
 /// A dummy game state that shows 3 sprites.
+#[derive(Default)]
 pub struct MyState;
 
 impl SimpleState for MyState {
@@ -121,6 +124,11 @@ impl SimpleState for MyState {
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
+
+            if is_key_down(&event, VirtualKeyCode::L){
+                Trans::Push(Box::new(GameState));
+            }
+
             // Check if the window should be closed
             if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
                 return Trans::Quit;
@@ -168,7 +176,7 @@ fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
         let loader = world.read_resource::<Loader>();
         let texture_storage = world.read_resource::<AssetStorage<Texture>>();
         loader.load(
-            "sprites/tetriminos/I/I.png",
+            "sprites/imported/logo.png",
             ImageFormat::default(),
             (),
             &texture_storage,
@@ -181,7 +189,7 @@ fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
         let loader = world.read_resource::<Loader>();
         let sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
         loader.load(
-            "sprites/tetriminos/I/I.ron",
+            "sprites/imported/logo.ron",
             SpriteSheetFormat(texture_handle),
             (),
             &sheet_storage,
