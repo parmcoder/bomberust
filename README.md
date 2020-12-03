@@ -1,17 +1,39 @@
-<img src="repo/splash.png" alt="Amethyst 2D starter template" />
+# RUSTRIS
+This is a term project for my ICCS311-T1-2021.
 
-This project template will get you from 0 to drawing something on the screen in no time. If you're looking for a more in-depth introduction to the engine, please have a look at [our book](https://book.amethyst.rs/stable/)!
+Objectives
+1. To apply the concept of parallelism and concurrency using amethyst game engine.
+2. To study how tetris works and practice coding in rust
+3. To show that game developing in rust is awesome.
 
-This project template also includes a small example of how to draw UI, see in state.rs for create_ui_example().
-<img src="repo/screenshot.png" alt="Amethyst 2D starter template" height="300px" />
+Why rust?
+TBA
+
+How games developed in Rust are more optimized using than other languages?
+TBA
+
+Why amethyst?
+TBA
+
+How is the performance?
+TBA
+
+Pros and Cons?
+TBA
+
+Milestones
+TBA
+
+Discussion
+TBA
 
 ## Quickstart
 
 - Clone the repository
 
 ```bash
-git clone https://github.com/amethyst/amethyst-starter-2d.git
-cd amethyst-starter-2d
+git clone https://github.com/parmcoder/rustris-amethyst
+cd rustris-amethyst
 ```
 
 - Build and run the project
@@ -42,17 +64,3 @@ After install you may be required to run this command `sudo xcode-select --switc
 #### For Linux Users
 
 You might need to install some dependencies. Please refer to [this section](https://github.com/amethyst/amethyst#dependencies) of the README for more details.
-
-## Features
-
-This project contains the minimum amount of code needed to draw sprites to the screen. Here's a small summary of what you'll find in the source files:
-
-- `resources/display_config.ron`  
-  Contains the window configuration (size, title).
-
-- `src/main.rs`  
-  Creates the render graph, adds the required bundles, builds the game data with our own state and finally, starts the game's main event loop.
-
-- `src/state.rs`  
-  Implements the main game state. In the `on_start` hook, the camera is initialized, and the sprites that will be drawn are loaded and their entities created.  
-   In the `handle_event` hook, we print any keys that were pressed and close the window if the user presses escape or the OS requests that we quit.
