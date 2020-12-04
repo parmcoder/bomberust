@@ -7,12 +7,17 @@ use amethyst::{
     shrev::EventChannel,
 };
 
+use crate::audio::{play_clear_sound, Sounds};
+use crate::constants::BOARD_WIDTH;
+use crate::entities::{DroppedPiece, Position};
+use crate::events::PieceLandEvent;
+use amethyst::assets::AssetStorage;
+use amethyst::audio::output::Output;
+use amethyst::audio::Source;
+use amethyst::core::ecs::{Read, ReadExpect};
 use amethyst::core::Transform;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use crate::events::PieceLandEvent;
-use crate::entities::{Position, DroppedPiece};
-use crate::constants::BOARD_WIDTH;
 
 #[derive(SystemDesc)]
 pub struct LineClearSystem {
@@ -32,11 +37,23 @@ impl<'s> System<'s> for LineClearSystem {
         WriteStorage<'s, Transform>,
         Entities<'s>,
         Write<'s, EventChannel<PieceLandEvent>>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
         &mut self,
-        (mut dropped_pieces, mut positions, mut transforms, entities, mut land_channel): Self::SystemData,
+        (
+            mut dropped_pieces,
+            mut positions,
+            mut transforms,
+            entities,
+            mut land_channel,
+            storage,
+            sounds,
+            audio_output,
+        ): Self::SystemData,
     ) {
         let reader_id = self
             .reader_id
@@ -62,6 +79,8 @@ impl<'s> System<'s> for LineClearSystem {
             for dead_row in drop_pos_row.keys() {
                 if let Some(pieces_to_clear) = drop_pos_row.get(dead_row) {
                     if pieces_to_clear.len() >= BOARD_WIDTH as usize {
+                        play_clear_sound(&*sounds, &storage, audio_output.as_deref());
+
                         for block_to_destroy in pieces_to_clear {
                             entities.delete(block_to_destroy.0).unwrap();
                         }

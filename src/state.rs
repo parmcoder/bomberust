@@ -3,8 +3,7 @@ use amethyst::{
     core::transform::Transform,
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat
-               , SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{
         Anchor, FontHandle, LineMode, Stretch, TtfFormat, UiButtonBuilder, UiImage, UiText,
         UiTransform,
@@ -12,21 +11,19 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
-use log::info;
-use crate::entities::{Position, Piece, PieceType};
-use amethyst::renderer::debug_drawing::DebugLinesComponent;
-use amethyst::core::ecs::shrev::EventChannel;
+use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH};
+use crate::entities::{Piece, PieceType, Position};
 use crate::events::PieceLandEvent;
-use crate::constants::{BOARD_WIDTH, BOARD_HEIGHT};
-
+use amethyst::core::ecs::shrev::EventChannel;
+use amethyst::renderer::debug_drawing::DebugLinesComponent;
+use log::info;
+use crate::audio::initialise_audio;
 
 #[derive(Default)]
 pub struct GameState;
 
 impl SimpleState for GameState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        Trans::Push(Box::new(MyState));
-
         let StateData { world, .. } = data;
 
         let mut b = Piece::new(PieceType::I);
@@ -34,7 +31,10 @@ impl SimpleState for GameState {
         world
             .create_entity()
             .with(b)
-            .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 })
+            .with(Position {
+                row: BOARD_HEIGHT as i8 - 4,
+                col: 3,
+            })
             .build();
 
         // Setup debug lines as a component and add lines to render axes & grid
@@ -47,10 +47,17 @@ impl SimpleState for GameState {
         world.insert(land_channel);
 
         let mut transform = Transform::default();
-        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5 +2.0, BOARD_HEIGHT as f32 * 0.5, 1.0);
+        transform.set_translation_xyz(
+            BOARD_WIDTH as f32 * 0.5 + 2.0,
+            BOARD_HEIGHT as f32 * 0.5,
+            1.0,
+        );
         world
             .create_entity()
-            .with(Camera::standard_2d((BOARD_WIDTH+4) as f32, BOARD_HEIGHT as f32))
+            .with(Camera::standard_2d(
+                (BOARD_WIDTH + 4) as f32,
+                BOARD_HEIGHT as f32,
+            ))
             .with(transform)
             .build();
 
@@ -73,7 +80,7 @@ impl SimpleState for GameState {
                 &world.read_resource::<AssetStorage<SpriteSheet>>(),
             )
         };
-
+        initialise_audio(world);
         world.insert(spritesheet_handle);
     }
 
@@ -126,8 +133,7 @@ impl SimpleState for MyState {
         event: StateEvent,
     ) -> SimpleTrans {
         if let StateEvent::Window(event) = &event {
-
-            if is_key_down(&event, VirtualKeyCode::L){
+            if is_key_down(&event, VirtualKeyCode::L) {
                 Trans::Push(Box::new(GameState));
             }
 

@@ -6,12 +6,10 @@ use amethyst::{
     shrev::EventChannel,
 };
 
-use crate::{
-    events::ResetFallTimerEvent,
-};
-use std::collections::{HashMap, HashSet};
-use crate::entities::{Piece, Position, DroppedPiece};
 use crate::constants::BOARD_WIDTH;
+use crate::entities::{DroppedPiece, Piece, Position};
+use crate::events::ResetFallTimerEvent;
+use std::collections::{HashMap, HashSet};
 
 #[derive(SystemDesc)]
 pub struct PieceInputSystem {

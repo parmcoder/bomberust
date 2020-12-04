@@ -1,4 +1,4 @@
-use crate::entities::{Position, Piece};
+use crate::entities::{Piece, Position};
 
 use amethyst::assets::Handle;
 use amethyst::core::ecs::{Component, DenseVecStorage, Entities, ReadExpect};

@@ -1,6 +1,6 @@
 use crate::entities::{DroppedPiece, Piece, Position};
-use crate::events::{ResetFallTimerEvent, PieceLandEvent};
-use amethyst::assets::Handle;
+use crate::events::{PieceLandEvent, ResetFallTimerEvent};
+use amethyst::assets::{Handle, AssetStorage};
 use amethyst::core::ecs::{
     Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
 };
@@ -10,8 +10,11 @@ use amethyst::core::{Time, Transform};
 use amethyst::renderer::resources::Tint;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
 
-use amethyst::core::math::Vector3;
 use amethyst::core::ecs::shrev::EventChannel;
+use amethyst::core::math::Vector3;
+use crate::audio::{play_drop_sound, Sounds};
+use amethyst::audio::Source;
+use amethyst::audio::output::Output;
 
 const FALL_TIMER: f32 = 0.4;
 
@@ -42,6 +45,9 @@ impl<'s> System<'s> for DroppingSystem {
         WriteStorage<'s, SpriteRender>,
         ReadExpect<'s, Handle<SpriteSheet>>,
         WriteStorage<'s, Tint>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
@@ -58,6 +64,7 @@ impl<'s> System<'s> for DroppingSystem {
             mut sprite_renders,
             sprite_sheet_handle,
             mut tints,
+            storage, sounds, audio_output
         ): Self::SystemData,
     ) {
         let reader_id = self
@@ -80,12 +87,10 @@ impl<'s> System<'s> for DroppingSystem {
 
             let mut last_dropped_pieces = Vec::<(DroppedPiece, Position)>::new();
 
-            //make them functional
-
             for (entity, piece, position) in (&*entities, &pieces, &mut positions).join() {
                 let mut collide = false;
 
-                'self_loop: for self_pos in piece.get_filled_positions(position) {
+                for self_pos in piece.get_filled_positions(position) {
                     if self_pos.row == 0 {
                         collide = true;
                         break;
@@ -98,18 +103,19 @@ impl<'s> System<'s> for DroppingSystem {
                         };
                         if pos_below_self == *other_pos {
                             collide = true;
-                            break 'self_loop;
                         }
                     }
                 }
 
                 if collide {
                     for new_dropped_pos in piece.get_filled_positions(position) {
-                        last_dropped_pieces.push((DroppedPiece::new(piece.piece_type), new_dropped_pos));
+                        last_dropped_pieces
+                            .push((DroppedPiece::new(piece.piece_type), new_dropped_pos));
                     }
                     entities.delete(entity).unwrap();
 
-                land_channel.single_write(PieceLandEvent {});
+                    land_channel.single_write(PieceLandEvent {});
+                    play_drop_sound(&*sounds, &storage, audio_output.as_deref());
                 } else {
                     position.row -= 1;
                 }

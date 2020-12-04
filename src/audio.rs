@@ -1,16 +1,15 @@
-use amethyst::{
-    assets::{Loader,AssetStorage},
-    ecs::{World, WorldExt},
-    audio::{output::Output, Source, SourceHandle, AudioSink},
-};
+use crate::constants::{MUSIC_TRACKS, DROP_SOUND, CLEAR_SOUND};
 use amethyst::audio::OggFormat;
+use amethyst::{
+    assets::{AssetStorage, Loader},
+    audio::{output::Output, AudioSink, Source, SourceHandle},
+    ecs::{World, WorldExt},
+};
 use std::{iter::Cycle, vec::IntoIter};
-use crate::constants::{MUSIC_TRACKS, BOUNCE_SOUND, SCORE_SOUND};
-
 
 pub struct Sounds {
-    pub score_sfx: SourceHandle,
-    pub bounce_sfx: SourceHandle,
+    pub clear_sfx: SourceHandle,
+    pub drop_sfx: SourceHandle,
 }
 pub struct Music {
     pub music: Cycle<IntoIter<SourceHandle>>,
@@ -37,24 +36,22 @@ pub fn initialise_audio(world: &mut World) {
             .cycle();
         let music = Music { music };
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
-            score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
+            drop_sfx: load_audio_track(&loader, &world, DROP_SOUND),
+            clear_sfx: load_audio_track(&loader, &world, CLEAR_SOUND),
         };
 
         (sound, music)
-
     };
 
     // Add sound effects to the world. We have to do this in another scope because
     // world won't let us insert new resources as long as `Loader` is borrowed.
     world.insert(sound_effects);
     world.insert(music);
-
 }
 
 pub fn play_drop_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.bounce_sfx) {
+        if let Some(sound) = storage.get(&sounds.drop_sfx) {
             output.play_once(sound, 1.0);
         }
     }
@@ -62,7 +59,7 @@ pub fn play_drop_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: 
 
 pub fn play_clear_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
     if let Some(ref output) = output.as_ref() {
-        if let Some(sound) = storage.get(&sounds.score_sfx) {
+        if let Some(sound) = storage.get(&sounds.clear_sfx) {
             output.play_once(sound, 1.0);
         }
     }

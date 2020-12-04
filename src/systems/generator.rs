@@ -7,9 +7,9 @@ use amethyst::{
     shrev::EventChannel,
 };
 
+use crate::constants::BOARD_HEIGHT;
 use crate::entities::{Piece, Position};
 use crate::events::PieceLandEvent;
-use crate::constants::BOARD_HEIGHT;
 
 #[derive(SystemDesc)]
 pub struct PieceSpawnSystem {
@@ -41,7 +41,13 @@ impl<'s> System<'s> for PieceSpawnSystem {
             entities
                 .build_entity()
                 .with(b, &mut blocks)
-                .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 }, &mut positions)
+                .with(
+                    Position {
+                        row: BOARD_HEIGHT as i8 - 4,
+                        col: 3,
+                    },
+                    &mut positions,
+                )
                 .build();
         }
     }
