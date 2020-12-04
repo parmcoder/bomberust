@@ -5,10 +5,13 @@ use amethyst::{
 };
 use amethyst::audio::OggFormat;
 use std::{iter::Cycle, vec::IntoIter};
-use crate::audio::sounds::Sounds;
-use crate::constants::{MUSIC_TRACKS, DROP_SOUND};
+use crate::constants::{MUSIC_TRACKS, BOUNCE_SOUND, SCORE_SOUND};
 
 
+pub struct Sounds {
+    pub score_sfx: SourceHandle,
+    pub bounce_sfx: SourceHandle,
+}
 pub struct Music {
     pub music: Cycle<IntoIter<SourceHandle>>,
 }
@@ -34,8 +37,8 @@ pub fn initialise_audio(world: &mut World) {
             .cycle();
         let music = Music { music };
         let sound = Sounds {
-            bounce_sfx: load_audio_track(&loader, &world, DROP_SOUND),
-            score_sfx: load_audio_track(&loader, &world, DROP_SOUND),
+            bounce_sfx: load_audio_track(&loader, &world, BOUNCE_SOUND),
+            score_sfx: load_audio_track(&loader, &world, SCORE_SOUND),
         };
 
         (sound, music)
@@ -47,4 +50,20 @@ pub fn initialise_audio(world: &mut World) {
     world.insert(sound_effects);
     world.insert(music);
 
+}
+
+pub fn play_drop_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
+    if let Some(ref output) = output.as_ref() {
+        if let Some(sound) = storage.get(&sounds.bounce_sfx) {
+            output.play_once(sound, 1.0);
+        }
+    }
+}
+
+pub fn play_clear_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
+    if let Some(ref output) = output.as_ref() {
+        if let Some(sound) = storage.get(&sounds.score_sfx) {
+            output.play_once(sound, 1.0);
+        }
+    }
 }

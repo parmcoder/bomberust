@@ -3,7 +3,8 @@ use amethyst::{
     core::transform::Transform,
     input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat
+               , SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{
         Anchor, FontHandle, LineMode, Stretch, TtfFormat, UiButtonBuilder, UiImage, UiText,
         UiTransform,
@@ -46,10 +47,10 @@ impl SimpleState for GameState {
         world.insert(land_channel);
 
         let mut transform = Transform::default();
-        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5, BOARD_HEIGHT as f32 * 0.5, 1.0);
+        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5 +2.0, BOARD_HEIGHT as f32 * 0.5, 1.0);
         world
             .create_entity()
-            .with(Camera::standard_2d(BOARD_WIDTH as f32, BOARD_HEIGHT as f32))
+            .with(Camera::standard_2d((BOARD_WIDTH+4) as f32, BOARD_HEIGHT as f32))
             .with(transform)
             .build();
 
@@ -82,6 +83,7 @@ impl SimpleState for GameState {
 }
 
 /// A dummy game state that shows 3 sprites.
+/// Expecting this state to be main menu
 #[derive(Default)]
 pub struct MyState;
 

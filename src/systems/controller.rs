@@ -116,7 +116,7 @@ impl<'s> System<'s> for PieceInputSystem {
             .map(|(_, pos)| *pos)
             .collect::<Vec<_>>();
 
-        'block_loop: for (block, position) in (&mut piece, &mut positions).join() {
+        'piece_loop: for (block, position) in (&mut piece, &mut positions).join() {
             if self.action_no_spam(&*input, &"drop_hard".to_string()) {
                 Self::hard_drop(block, position, &dead_positions);
             }
@@ -150,7 +150,7 @@ impl<'s> System<'s> for PieceInputSystem {
             }
 
             if Self::position_collides(&new_block, &new_position, &dead_positions) {
-                continue 'block_loop;
+                continue 'piece_loop;
             }
 
             if position.row != new_position.row {

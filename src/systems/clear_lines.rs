@@ -36,37 +36,37 @@ impl<'s> System<'s> for LineClearSystem {
 
     fn run(
         &mut self,
-        (mut dead_blocks, mut positions, mut transforms, entities, mut land_channel): Self::SystemData,
+        (mut dropped_pieces, mut positions, mut transforms, entities, mut land_channel): Self::SystemData,
     ) {
         let reader_id = self
             .reader_id
             .get_or_insert_with(|| land_channel.register_reader());
 
         for _ in land_channel.read(reader_id) {
-            let mut dead_pos_by_row = HashMap::new();
+            let mut drop_pos_row = HashMap::new();
             for (entity, _, dead_position, dead_transform) in (
                 &*entities,
-                &mut dead_blocks,
+                &mut dropped_pieces,
                 &mut positions,
                 &mut transforms,
             )
                 .join()
             {
-                dead_pos_by_row
+                drop_pos_row
                     .entry(dead_position.row)
                     .or_insert_with(Vec::new)
                     .push((entity, dead_position, dead_transform));
             }
 
             let mut rows_to_descend: HashMap<i8, i8> = HashMap::new();
-            for dead_row in dead_pos_by_row.keys() {
-                if let Some(blocks_to_destroy) = dead_pos_by_row.get(dead_row) {
-                    if blocks_to_destroy.len() >= BOARD_WIDTH as usize {
-                        for block_to_destroy in blocks_to_destroy {
+            for dead_row in drop_pos_row.keys() {
+                if let Some(pieces_to_clear) = drop_pos_row.get(dead_row) {
+                    if pieces_to_clear.len() >= BOARD_WIDTH as usize {
+                        for block_to_destroy in pieces_to_clear {
                             entities.delete(block_to_destroy.0).unwrap();
                         }
 
-                        for other_row in dead_pos_by_row.keys().filter(|x| x > &dead_row) {
+                        for other_row in drop_pos_row.keys().filter(|x| x > &dead_row) {
                             match rows_to_descend.entry(*other_row) {
                                 Entry::Vacant(e) => {
                                     e.insert(1);
@@ -81,10 +81,10 @@ impl<'s> System<'s> for LineClearSystem {
             }
 
             for row_to_descend in rows_to_descend {
-                if let Some(blocks_to_move) = dead_pos_by_row.get_mut(&row_to_descend.0) {
-                    for block_to_move in blocks_to_move {
-                        block_to_move.1.row -= row_to_descend.1;
-                        block_to_move
+                if let Some(pieces_to_move) = drop_pos_row.get_mut(&row_to_descend.0) {
+                    for piece_to_move in pieces_to_move {
+                        piece_to_move.1.row -= row_to_descend.1;
+                        piece_to_move
                             .2
                             .prepend_translation_y(-(row_to_descend.1 as f32));
                     }
