@@ -61,7 +61,7 @@ impl<'s> System<'s> for LineClearSystem {
 
         for _ in land_channel.read(reader_id) {
             let mut drop_pos_row = HashMap::new();
-            for (entity, _, dead_position, dead_transform) in (
+            for (entity, _, dropped_pos, dropped_transform) in (
                 &*entities,
                 &mut dropped_pieces,
                 &mut positions,
@@ -70,14 +70,14 @@ impl<'s> System<'s> for LineClearSystem {
                 .join()
             {
                 drop_pos_row
-                    .entry(dead_position.row)
+                    .entry(dropped_pos.row)
                     .or_insert_with(Vec::new)
-                    .push((entity, dead_position, dead_transform));
+                    .push((entity, dropped_pos, dropped_transform));
             }
 
             let mut rows_to_descend: HashMap<i8, i8> = HashMap::new();
-            for dead_row in drop_pos_row.keys() {
-                if let Some(pieces_to_clear) = drop_pos_row.get(dead_row) {
+            for dropped_row in drop_pos_row.keys() {
+                if let Some(pieces_to_clear) = drop_pos_row.get(dropped_row) {
                     if pieces_to_clear.len() >= BOARD_WIDTH as usize {
                         play_clear_sound(&*sounds, &storage, audio_output.as_deref());
 
@@ -85,7 +85,7 @@ impl<'s> System<'s> for LineClearSystem {
                             entities.delete(block_to_destroy.0).unwrap();
                         }
 
-                        for other_row in drop_pos_row.keys().filter(|x| x > &dead_row) {
+                        for other_row in drop_pos_row.keys().filter(|x| x > &dropped_row) {
                             match rows_to_descend.entry(*other_row) {
                                 Entry::Vacant(e) => {
                                     e.insert(1);

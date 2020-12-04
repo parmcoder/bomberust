@@ -30,7 +30,7 @@ impl<'s> System<'s> for PieceSpawnSystem {
         Entities<'s>,
     );
 
-    fn run(&mut self, (mut blocks, mut land_channel, mut positions, entities): Self::SystemData) {
+    fn run(&mut self, (mut pieces, mut land_channel, mut positions, entities): Self::SystemData) {
         let reader_id = self
             .reader_id
             .get_or_insert_with(|| land_channel.register_reader());
@@ -40,7 +40,7 @@ impl<'s> System<'s> for PieceSpawnSystem {
             b.rotation = 0;
             entities
                 .build_entity()
-                .with(b, &mut blocks)
+                .with(b, &mut pieces)
                 .with(
                     Position {
                         row: BOARD_HEIGHT as i8 - 4,

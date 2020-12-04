@@ -11,13 +11,13 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
+use crate::audio::initialise_audio;
 use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH};
 use crate::entities::{Piece, PieceType, Position};
 use crate::events::PieceLandEvent;
 use amethyst::core::ecs::shrev::EventChannel;
 use amethyst::renderer::debug_drawing::DebugLinesComponent;
 use log::info;
-use crate::audio::initialise_audio;
 
 #[derive(Default)]
 pub struct GameState;
@@ -80,8 +80,9 @@ impl SimpleState for GameState {
                 &world.read_resource::<AssetStorage<SpriteSheet>>(),
             )
         };
-        initialise_audio(world);
         world.insert(spritesheet_handle);
+        initialise_audio(world);
+        create_ui_example(world);
     }
 
     fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
@@ -240,7 +241,7 @@ fn init_sprites(world: &mut World, sprites: &[SpriteRender], dimensions: &Screen
 /// Creates a simple UI background and a UI text label
 /// This is the pure code only way to create UI with amethyst.
 pub fn create_ui_example(world: &mut World) {
-    // this creates the simple gray background UI element.
+    // this creates the simple pink background UI element.
     let ui_background = world
         .create_entity()
         .with(UiImage::SolidColor([0.6, 0.1, 0.2, 1.0]))
@@ -248,11 +249,11 @@ pub fn create_ui_example(world: &mut World) {
             "".to_string(),
             Anchor::TopLeft,
             Anchor::TopLeft,
-            30.0,
-            -30.,
+            430.0,
+            0.,
             0.,
             250.,
-            50.,
+            800.,
         ))
         .build();
 
@@ -273,19 +274,118 @@ pub fn create_ui_example(world: &mut World) {
             "".to_string(),
             Anchor::TopLeft,
             Anchor::TopLeft,
-            40.0,
+            450.0,
             -40.,
             1.,
             200.,
             50.,
         ))
         .with(UiText::new(
-            font,
+            font.clone(),
             "Rustris!".to_string(),
-            [1., 1., 1., 1.],
+            [1., 0.5, 1., 1.],
             30.,
             LineMode::Single,
             Anchor::TopLeft,
         ))
         .build();
+
+    for (x, y) in [
+        (-200.0, "How to play"),
+        (-240.0, "WASD - move"),
+        (-280.0, "K - rotate ccw"),
+        (-320.0, "J - rotate cw"),
+    ]
+    .iter()
+    {
+        world
+            .create_entity()
+            .with(UiTransform::new(
+                "".to_string(),
+                Anchor::TopLeft,
+                Anchor::TopLeft,
+                440.0,
+                x.clone(),
+                1.,
+                200.,
+                500.,
+            ))
+            .with(UiText::new(
+                font.clone(),
+                y.clone().to_string(),
+                [1., 1., 1., 1.],
+                25.,
+                LineMode::Single,
+                Anchor::TopLeft,
+            ))
+            .build();
+    }
+    // world
+    //     .create_entity()
+    //     .with(UiTransform::new(
+    //         "".to_string(),
+    //         Anchor::TopLeft,
+    //         Anchor::TopLeft,
+    //         450.0,
+    //         -200.,
+    //         1.,
+    //         200.,
+    //         500.,
+    //     ))
+    //     .with(UiText::new(
+    //         font.clone(),
+    //         "How to play?".to_string(),
+    //         [1., 1., 1., 1.],
+    //         30.,
+    //         LineMode::Single,
+    //         Anchor::TopLeft,
+    //     ))
+    //     .build();
+    //
+    // world
+    //     .create_entity()
+    //     .with(UiTransform::new(
+    //         "".to_string(),
+    //         Anchor::TopLeft,
+    //         Anchor::TopLeft,
+    //         450.0,
+    //         -240.,
+    //         1.,
+    //         200.,
+    //         500.,
+    //     ))
+    //     .with(UiText::new(
+    //         font.clone(),
+    //         "WASD - move
+    //         J - rotate cw
+    //         K - rotate ccw".to_string(),
+    //         [1., 1., 1., 1.],
+    //         30.,
+    //         LineMode::Single,
+    //         Anchor::TopLeft,
+    //     ))
+    //     .build();
+    //
+    // world
+    //     .create_entity()
+    //     .with(UiTransform::new(
+    //         "".to_string(),
+    //         Anchor::TopLeft,
+    //         Anchor::TopLeft,
+    //         450.0,
+    //         -280.,
+    //         1.,
+    //         200.,
+    //         500.,
+    //     ))
+    //     .with(UiText::new(
+    //         font.clone(),
+    //         "J - rotate cw
+    //         K - rotate ccw".to_string(),
+    //         [1., 1., 1., 1.],
+    //         30.,
+    //         LineMode::Single,
+    //         Anchor::TopLeft,
+    //     ))
+    //     .build();
 }
