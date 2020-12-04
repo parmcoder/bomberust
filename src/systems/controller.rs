@@ -6,12 +6,10 @@ use amethyst::{
     shrev::EventChannel,
 };
 
-use crate::{
-    events::ResetFallTimerEvent,
-};
-use std::collections::{HashMap, HashSet};
-use crate::entities::{Piece, Position, DroppedPiece};
 use crate::constants::BOARD_WIDTH;
+use crate::entities::{DroppedPiece, Piece, Position};
+use crate::events::ResetFallTimerEvent;
+use std::collections::{HashMap, HashSet};
 
 #[derive(SystemDesc)]
 pub struct PieceInputSystem {
@@ -72,8 +70,8 @@ impl PieceInputSystem {
         for self_pos in piece.get_filled_positions(&position) {
             let outside_bounds =
                 || self_pos.col < 0 || self_pos.col >= BOARD_WIDTH as i8 || self_pos.row < 0;
-            let in_dead = || dropped_pieces.iter().any(|dead_pos| self_pos == *dead_pos);
-            if outside_bounds() || in_dead() {
+            let in_dropped = || dropped_pieces.iter().any(|dropped_pos| self_pos == *dropped_pos);
+            if outside_bounds() || in_dropped() {
                 return true;
             }
         }
@@ -81,14 +79,14 @@ impl PieceInputSystem {
         false
     }
 
-    fn hard_drop(block: &Piece, position: &mut Position, dead_positions: &[Position]) {
+    fn hard_drop(piece: &Piece, position: &mut Position, dropped_positions: &[Position]) {
         let down_collides = |pos: &Position| {
             let down_pos = Position {
                 row: pos.row - 1,
                 col: pos.col,
             };
 
-            Self::position_collides(block, &down_pos, dead_positions)
+            Self::position_collides(piece, &down_pos, dropped_positions)
         };
 
         while !down_collides(position) {
@@ -109,20 +107,20 @@ impl<'s> System<'s> for PieceInputSystem {
 
     fn run(
         &mut self,
-        (mut piece, mut dropped_pieces, mut positions, input, mut reset_channel, time): Self::SystemData,
+        (mut pieces, mut dropped_pieces, mut positions, input, mut reset_channel, time): Self::SystemData,
     ) {
-        let dead_positions = (&mut dropped_pieces, &mut positions)
+        let dropped_positions = (&mut dropped_pieces, &mut positions)
             .join()
             .map(|(_, pos)| *pos)
             .collect::<Vec<_>>();
 
-        'block_loop: for (block, position) in (&mut piece, &mut positions).join() {
+        for (piece, position) in (&mut pieces, &mut positions).join() {
             if self.action_no_spam(&*input, &"drop_hard".to_string()) {
-                Self::hard_drop(block, position, &dead_positions);
+                Self::hard_drop(piece, position, &dropped_positions);
             }
 
             let movement_input = input.axis_value("move_x").unwrap_or(0.0);
-            let movement = self.action_with_timer(&*time, 0.14, "move_x", movement_input, 0.0);
+            let movement = self.action_with_timer(&*time, 0.08, "move_x", movement_input, 0.0);
 
             let soft_drop_input = input.action_is_down("drop_soft").unwrap_or(false);
             let soft_drop =
@@ -133,24 +131,24 @@ impl<'s> System<'s> for PieceInputSystem {
                 col: position.col - movement as i8,
             };
 
-            let mut new_block = Piece {
-                piece_type: block.piece_type,
-                rotation: block.rotation,
+            let mut new_piece = Piece {
+                piece_type: piece.piece_type,
+                rotation: piece.rotation,
             };
 
             let rotated = self.action_no_spam(&*input, &"rotate_cw".to_string());
-            let rotatedCCW = self.action_no_spam(&*input, &"rotate_ccw".to_string());
+            let rotated_ccw = self.action_no_spam(&*input, &"rotate_ccw".to_string());
 
             if rotated {
-                new_block.rotate_cw();
-            } else if rotatedCCW {
-                new_block.rotate_ccw();
+                new_piece.rotate_cw();
+            } else if rotated_ccw {
+                new_piece.rotate_ccw();
             } else if movement == 0.0 && !soft_drop {
                 continue;
             }
 
-            if Self::position_collides(&new_block, &new_position, &dead_positions) {
-                continue 'block_loop;
+            if Self::position_collides(&new_piece, &new_position, &dropped_positions) {
+                continue;
             }
 
             if position.row != new_position.row {
@@ -159,7 +157,7 @@ impl<'s> System<'s> for PieceInputSystem {
 
             position.row = new_position.row;
             position.col = new_position.col;
-            block.rotation = new_block.rotation;
+            piece.rotation = new_piece.rotation;
         }
     }
 }

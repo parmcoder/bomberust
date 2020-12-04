@@ -13,7 +13,9 @@ How games developed in Rust are more optimized using than other languages?
 TBA
 
 Why amethyst?
-TBA
+
+Good game engine
+https://book.amethyst.rs/master/
 
 How is the performance?
 TBA

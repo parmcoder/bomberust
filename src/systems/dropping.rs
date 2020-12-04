@@ -1,6 +1,6 @@
 use crate::entities::{DroppedPiece, Piece, Position};
-use crate::events::{ResetFallTimerEvent, PieceLandEvent};
-use amethyst::assets::Handle;
+use crate::events::{PieceLandEvent, ResetFallTimerEvent};
+use amethyst::assets::{Handle, AssetStorage};
 use amethyst::core::ecs::{
     Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
 };
@@ -10,8 +10,11 @@ use amethyst::core::{Time, Transform};
 use amethyst::renderer::resources::Tint;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
 
-use amethyst::core::math::Vector3;
 use amethyst::core::ecs::shrev::EventChannel;
+use amethyst::core::math::Vector3;
+use crate::audio::{play_drop_sound, Sounds};
+use amethyst::audio::Source;
+use amethyst::audio::output::Output;
 
 const FALL_TIMER: f32 = 0.4;
 
@@ -42,13 +45,16 @@ impl<'s> System<'s> for DroppingSystem {
         WriteStorage<'s, SpriteRender>,
         ReadExpect<'s, Handle<SpriteSheet>>,
         WriteStorage<'s, Tint>,
+        Read<'s, AssetStorage<Source>>,
+        ReadExpect<'s, Sounds>,
+        Option<Read<'s, Output>>,
     );
 
     fn run(
         &mut self,
         (
-            blocks,
-            mut dead_blocks,
+            pieces,
+            mut dropped_pieces,
             mut positions,
             mut transforms,
             time,
@@ -58,6 +64,7 @@ impl<'s> System<'s> for DroppingSystem {
             mut sprite_renders,
             sprite_sheet_handle,
             mut tints,
+            storage, sounds, audio_output
         ): Self::SystemData,
     ) {
         let reader_id = self
@@ -73,49 +80,48 @@ impl<'s> System<'s> for DroppingSystem {
         if self.fall_timer <= 0.0 {
             self.fall_timer = FALL_TIMER;
 
-            let dead_positions = (&mut dead_blocks, &mut positions)
+            let dropped_positions = (&mut dropped_pieces, &mut positions)
                 .join()
                 .map(|(_, pos)| *pos)
                 .collect::<Vec<_>>();
 
-            let mut new_dead_blocks = Vec::<(DroppedPiece, Position)>::new();
+            let mut last_dropped_pieces = Vec::<(DroppedPiece, Position)>::new();
 
-            //make them functional
-
-            for (entity, block, position) in (&*entities, &blocks, &mut positions).join() {
+            for (entity, piece, position) in (&*entities, &pieces, &mut positions).join() {
                 let mut collide = false;
 
-                'self_loop: for self_pos in block.get_filled_positions(position) {
+                for self_pos in piece.get_filled_positions(position) {
                     if self_pos.row == 0 {
                         collide = true;
                         break;
                     }
 
-                    for other_pos in &dead_positions {
+                    for other_pos in &dropped_positions {
                         let pos_below_self = Position {
                             row: self_pos.row - 1,
                             col: self_pos.col,
                         };
                         if pos_below_self == *other_pos {
                             collide = true;
-                            break 'self_loop;
                         }
                     }
                 }
 
                 if collide {
-                    for new_dead_pos in block.get_filled_positions(position) {
-                        new_dead_blocks.push((DroppedPiece::new(block.piece_type), new_dead_pos));
+                    for new_dropped_pos in piece.get_filled_positions(position) {
+                        last_dropped_pieces
+                            .push((DroppedPiece::new(piece.piece_type), new_dropped_pos));
                     }
                     entities.delete(entity).unwrap();
 
-                land_channel.single_write(PieceLandEvent {});
+                    land_channel.single_write(PieceLandEvent {});
+                    play_drop_sound(&*sounds, &storage, audio_output.as_deref());
                 } else {
                     position.row -= 1;
                 }
             }
 
-            for (new_dead_block, new_pos) in new_dead_blocks {
+            for (new_dropped_piece, new_pos) in last_dropped_pieces {
                 let sprite_render = SpriteRender {
                     sprite_sheet: sprite_sheet_handle.clone(),
                     sprite_number: 0,
@@ -129,11 +135,11 @@ impl<'s> System<'s> for DroppingSystem {
                     0.0,
                 );
 
-                let tint = Tint(new_dead_block.piece_type.get_color());
+                let tint = Tint(new_dropped_piece.piece_type.get_color());
 
                 entities
                     .build_entity()
-                    .with(new_dead_block, &mut dead_blocks)
+                    .with(new_dropped_piece, &mut dropped_pieces)
                     .with(new_pos, &mut positions)
                     .with(sprite_render, &mut sprite_renders)
                     .with(sprite_transform, &mut transforms)

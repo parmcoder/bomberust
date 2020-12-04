@@ -5,8 +5,8 @@ use amethyst::{
 };
 
 use amethyst::core::ecs::rayon::iter::{IntoParallelIterator, IntoParallelRefMutIterator};
-use rand::prelude::Distribution;
 use rand::distributions::Standard;
+use rand::prelude::Distribution;
 use rand::Rng;
 
 //Normal Piece
@@ -138,4 +138,3 @@ pub struct Position {
 impl Component for Position {
     type Storage = DenseVecStorage<Self>;
 }
-
