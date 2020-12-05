@@ -11,6 +11,9 @@ use crate::entities::{DroppedPiece, Piece, Position};
 use crate::events::ResetFallTimerEvent;
 use std::collections::{HashMap, HashSet};
 
+/*
+For this one, we need to know what actions have been performed by the player.
+*/
 #[derive(SystemDesc)]
 pub struct PieceInputSystem {
     last_actions: HashSet<String>,

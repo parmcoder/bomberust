@@ -26,6 +26,7 @@ impl SimpleState for GameState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let StateData { world, .. } = data;
 
+        //Let's start with I piece everytime
         let mut b = Piece::new(PieceType::I);
         b.rotation = 3;
         world
@@ -42,10 +43,13 @@ impl SimpleState for GameState {
         world.register::<DebugLinesComponent>();
         world.create_entity().with(debug_lines_component).build();
 
+        // Like I said, data-driven means you have to set up a place for data to store.
+        // We put the event channel once the state is run.
         let mut land_channel = EventChannel::<PieceLandEvent>::new();
         land_channel.single_write(PieceLandEvent {});
         world.insert(land_channel);
 
+        // Also, setting up this camera is necessary, it is quite difficult to do it from scratch.
         let mut transform = Transform::default();
         transform.set_translation_xyz(
             BOARD_WIDTH as f32 * 0.5 + 2.0,
@@ -61,6 +65,7 @@ impl SimpleState for GameState {
             .with(transform)
             .build();
 
+        // Make sure that we have loaded the assets.
         let texture_handle = {
             let loader = world.read_resource::<Loader>();
             loader.load(
@@ -82,18 +87,17 @@ impl SimpleState for GameState {
         };
         world.insert(spritesheet_handle);
         initialise_audio(world);
-        create_ui_example(world);
+        create_ui(world);
     }
 
     fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        // if(is_key_down())
         Trans::None
     }
 }
 
 /// Creates a simple UI background and a UI text label
 /// This is the pure code only way to create UI with amethyst.
-pub fn create_ui_example(world: &mut World) {
+pub fn create_ui(world: &mut World) {
     // this creates the simple pink background UI element.
     let ui_background = world
         .create_entity()
@@ -173,72 +177,4 @@ pub fn create_ui_example(world: &mut World) {
             ))
             .build();
     }
-    // world
-    //     .create_entity()
-    //     .with(UiTransform::new(
-    //         "".to_string(),
-    //         Anchor::TopLeft,
-    //         Anchor::TopLeft,
-    //         450.0,
-    //         -200.,
-    //         1.,
-    //         200.,
-    //         500.,
-    //     ))
-    //     .with(UiText::new(
-    //         font.clone(),
-    //         "How to play?".to_string(),
-    //         [1., 1., 1., 1.],
-    //         30.,
-    //         LineMode::Single,
-    //         Anchor::TopLeft,
-    //     ))
-    //     .build();
-    //
-    // world
-    //     .create_entity()
-    //     .with(UiTransform::new(
-    //         "".to_string(),
-    //         Anchor::TopLeft,
-    //         Anchor::TopLeft,
-    //         450.0,
-    //         -240.,
-    //         1.,
-    //         200.,
-    //         500.,
-    //     ))
-    //     .with(UiText::new(
-    //         font.clone(),
-    //         "WASD - move
-    //         J - rotate cw
-    //         K - rotate ccw".to_string(),
-    //         [1., 1., 1., 1.],
-    //         30.,
-    //         LineMode::Single,
-    //         Anchor::TopLeft,
-    //     ))
-    //     .build();
-    //
-    // world
-    //     .create_entity()
-    //     .with(UiTransform::new(
-    //         "".to_string(),
-    //         Anchor::TopLeft,
-    //         Anchor::TopLeft,
-    //         450.0,
-    //         -280.,
-    //         1.,
-    //         200.,
-    //         500.,
-    //     ))
-    //     .with(UiText::new(
-    //         font.clone(),
-    //         "J - rotate cw
-    //         K - rotate ccw".to_string(),
-    //         [1., 1., 1., 1.],
-    //         30.,
-    //         LineMode::Single,
-    //         Anchor::TopLeft,
-    //     ))
-    //     .build();
 }
