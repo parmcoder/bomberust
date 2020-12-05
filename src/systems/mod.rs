@@ -1,10 +1,13 @@
-
-
-mod dropping;
-mod controller;
-mod generator;
 mod clear_lines;
+mod controller;
 mod draw_pieces;
+mod dropping;
+mod generator;
 
-pub use self::{dropping::DroppingSystem, controller::PieceInputSystem, generator::PieceSpawnSystem,
-               clear_lines::LineClearSystem, draw_pieces::{PieceImage, RenderSystem}};
+pub use self::{
+    clear_lines::LineClearSystem,
+    controller::PieceInputSystem,
+    draw_pieces::{PieceImage, RenderSystem},
+    dropping::DroppingSystem,
+    generator::PieceSpawnSystem,
+};

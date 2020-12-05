@@ -11,29 +11,31 @@ use amethyst::{
     window::ScreenDimensions,
 };
 
-use log::info;
-use crate::entities::{Position, Piece, PieceType};
-use amethyst::renderer::debug_drawing::DebugLinesComponent;
-use amethyst::core::ecs::shrev::EventChannel;
+use crate::audio::initialise_audio;
+use crate::constants::{BOARD_HEIGHT, BOARD_WIDTH};
+use crate::entities::{Piece, PieceType, Position};
 use crate::events::PieceLandEvent;
-use crate::constants::{BOARD_WIDTH, BOARD_HEIGHT};
-
+use amethyst::core::ecs::shrev::EventChannel;
+use amethyst::renderer::debug_drawing::DebugLinesComponent;
+use log::info;
 
 #[derive(Default)]
 pub struct GameState;
 
 impl SimpleState for GameState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        Trans::Push(Box::new(MyState));
-
         let StateData { world, .. } = data;
 
+        //Let's start with I piece everytime
         let mut b = Piece::new(PieceType::I);
         b.rotation = 3;
         world
             .create_entity()
             .with(b)
-            .with(Position { row: BOARD_HEIGHT as i8 - 4, col: 3 })
+            .with(Position {
+                row: BOARD_HEIGHT as i8 - 4,
+                col: 3,
+            })
             .build();
 
         // Setup debug lines as a component and add lines to render axes & grid
@@ -41,18 +43,29 @@ impl SimpleState for GameState {
         world.register::<DebugLinesComponent>();
         world.create_entity().with(debug_lines_component).build();
 
+        // Like I said, data-driven means you have to set up a place for data to store.
+        // We put the event channel once the state is run.
         let mut land_channel = EventChannel::<PieceLandEvent>::new();
         land_channel.single_write(PieceLandEvent {});
         world.insert(land_channel);
 
+        // Also, setting up this camera is necessary, it is quite difficult to do it from scratch.
         let mut transform = Transform::default();
-        transform.set_translation_xyz(BOARD_WIDTH as f32 * 0.5, BOARD_HEIGHT as f32 * 0.5, 1.0);
+        transform.set_translation_xyz(
+            BOARD_WIDTH as f32 * 0.5 + 2.0,
+            BOARD_HEIGHT as f32 * 0.5,
+            1.0,
+        );
         world
             .create_entity()
-            .with(Camera::standard_2d(BOARD_WIDTH as f32, BOARD_HEIGHT as f32))
+            .with(Camera::standard_2d(
+                (BOARD_WIDTH + 4) as f32,
+                BOARD_HEIGHT as f32,
+            ))
             .with(transform)
             .build();
 
+        // Make sure that we have loaded the assets.
         let texture_handle = {
             let loader = world.read_resource::<Loader>();
             loader.load(
@@ -72,8 +85,9 @@ impl SimpleState for GameState {
                 &world.read_resource::<AssetStorage<SpriteSheet>>(),
             )
         };
-
         world.insert(spritesheet_handle);
+        initialise_audio(world);
+        create_ui(world);
     }
 
     fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
@@ -81,158 +95,10 @@ impl SimpleState for GameState {
     }
 }
 
-/// A dummy game state that shows 3 sprites.
-#[derive(Default)]
-pub struct MyState;
-
-impl SimpleState for MyState {
-    // Here, we define hooks that will be called throughout the lifecycle of our game state.
-    //
-    // In this example, `on_start` is used for initializing entities
-    // and `handle_state` for managing the state transitions.
-    //
-    // For more state lifecycle hooks, see:
-    // https://book.amethyst.rs/stable/concepts/state.html#life-cycle
-
-    /// The state is initialized with:
-    /// - a camera centered in the middle of the screen.
-    /// - 3 sprites places around the center.
-    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let world = data.world;
-
-        // Get the screen dimensions so we can initialize the camera and
-        // place our sprites correctly later. We'll clone this since we'll
-        // pass the world mutably to the following functions.
-        let dimensions = (*world.read_resource::<ScreenDimensions>()).clone();
-
-        // Place the camera
-        init_camera(world, &dimensions);
-
-        // Load our sprites and display them
-        let sprites = load_sprites(world);
-        init_sprites(world, &sprites, &dimensions);
-
-        create_ui_example(world);
-    }
-
-    /// The following events are handled:
-    /// - The game state is quit when either the close button is clicked or when the escape key is pressed.
-    /// - Any other keypress is simply logged to the console.
-    fn handle_event(
-        &mut self,
-        mut _data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
-        if let StateEvent::Window(event) = &event {
-
-            if is_key_down(&event, VirtualKeyCode::L){
-                Trans::Push(Box::new(GameState));
-            }
-
-            // Check if the window should be closed
-            if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
-                return Trans::Quit;
-            }
-
-            // Listen to any key events
-            if let Some(event) = get_key(&event) {
-                info!("handling key event: {:?}", event);
-            }
-
-            // If you're looking for a more sophisticated event handling solution,
-            // including key bindings and gamepad support, please have a look at
-            // https://book.amethyst.rs/stable/pong-tutorial/pong-tutorial-03.html#capturing-user-input
-        }
-
-        // Keep going
-        Trans::None
-    }
-}
-
-/// Creates a camera entity in the `world`.
-///
-/// The `dimensions` are used to center the camera in the middle
-/// of the screen, as well as make it cover the entire screen.
-fn init_camera(world: &mut World, dimensions: &ScreenDimensions) {
-    let mut transform = Transform::default();
-    transform.set_translation_xyz(dimensions.width() * 0.5, dimensions.height() * 0.5, 1.);
-
-    world
-        .create_entity()
-        .with(Camera::standard_2d(dimensions.width(), dimensions.height()))
-        .with(transform)
-        .build();
-}
-
-/// Loads and splits the `logo.png` image asset into 3 sprites,
-/// which will then be assigned to entities for rendering them.
-///
-/// The provided `world` is used to retrieve the resource loader.
-fn load_sprites(world: &mut World) -> Vec<SpriteRender> {
-    // Load the texture for our sprites. We'll later need to
-    // add a handle to this texture to our `SpriteRender`s, so
-    // we need to keep a reference to it.
-    let texture_handle = {
-        let loader = world.read_resource::<Loader>();
-        let texture_storage = world.read_resource::<AssetStorage<Texture>>();
-        loader.load(
-            "sprites/imported/logo.png",
-            ImageFormat::default(),
-            (),
-            &texture_storage,
-        )
-    };
-
-    // Load the spritesheet definition file, which contains metadata on our
-    // spritesheet texture.
-    let sheet_handle = {
-        let loader = world.read_resource::<Loader>();
-        let sheet_storage = world.read_resource::<AssetStorage<SpriteSheet>>();
-        loader.load(
-            "sprites/imported/logo.ron",
-            SpriteSheetFormat(texture_handle),
-            (),
-            &sheet_storage,
-        )
-    };
-
-    // Create our sprite renders. Each will have a handle to the texture
-    // that it renders from. The handle is safe to clone, since it just
-    // references the asset.
-    (0..1)
-        .map(|i| SpriteRender {
-            sprite_sheet: sheet_handle.clone(),
-            sprite_number: i,
-        })
-        .collect()
-}
-
-/// Creates an entity in the `world` for each of the provided `sprites`.
-/// They are individually placed around the center of the screen.
-fn init_sprites(world: &mut World, sprites: &[SpriteRender], dimensions: &ScreenDimensions) {
-    for (i, sprite) in sprites.iter().enumerate() {
-        // Center our sprites around the center of the window
-        let x = (i as f32 - 1.) * 100. + dimensions.width() * 0.5;
-        let y = (i as f32 - 1.) * 100. + dimensions.height() * 0.5;
-        let mut transform = Transform::default();
-        transform.set_translation_xyz(x, y, 0.);
-
-        // Create an entity for each sprite and attach the `SpriteRender` as
-        // well as the transform. If you want to add behaviour to your sprites,
-        // you'll want to add a custom `Component` that will identify them, and a
-        // `System` that will iterate over them. See https://book.amethyst.rs/stable/concepts/system.html
-        world
-            .create_entity()
-            .with(sprite.clone())
-            .with(transform)
-            .build();
-    }
-}
-
 /// Creates a simple UI background and a UI text label
 /// This is the pure code only way to create UI with amethyst.
-pub fn create_ui_example(world: &mut World) {
-    // this creates the simple gray background UI element.
+pub fn create_ui(world: &mut World) {
+    // this creates the simple pink background UI element.
     let ui_background = world
         .create_entity()
         .with(UiImage::SolidColor([0.6, 0.1, 0.2, 1.0]))
@@ -240,11 +106,11 @@ pub fn create_ui_example(world: &mut World) {
             "".to_string(),
             Anchor::TopLeft,
             Anchor::TopLeft,
-            30.0,
-            -30.,
+            430.0,
+            0.,
             0.,
             250.,
-            50.,
+            800.,
         ))
         .build();
 
@@ -265,19 +131,50 @@ pub fn create_ui_example(world: &mut World) {
             "".to_string(),
             Anchor::TopLeft,
             Anchor::TopLeft,
-            40.0,
+            440.0,
             -40.,
             1.,
             200.,
-            50.,
+            60.,
         ))
         .with(UiText::new(
-            font,
-            "Rustris!".to_string(),
-            [1., 1., 1., 1.],
-            30.,
+            font.clone(),
+            "RUSTRIS".to_string(),
+            [1., 0.5, 1., 1.],
+            55.,
             LineMode::Single,
             Anchor::TopLeft,
         ))
         .build();
+
+    for (x, y) in [
+        (-200.0, "How to play"),
+        (-240.0, "WASD - move"),
+        (-280.0, "K - rotate ccw"),
+        (-320.0, "J - rotate cw"),
+    ]
+    .iter()
+    {
+        world
+            .create_entity()
+            .with(UiTransform::new(
+                "".to_string(),
+                Anchor::TopLeft,
+                Anchor::TopLeft,
+                440.0,
+                x.clone() + 30.,
+                1.,
+                200.,
+                500.,
+            ))
+            .with(UiText::new(
+                font.clone(),
+                y.clone().to_string(),
+                [1., 1., 1., 1.],
+                25.,
+                LineMode::Single,
+                Anchor::TopLeft,
+            ))
+            .build();
+    }
 }
