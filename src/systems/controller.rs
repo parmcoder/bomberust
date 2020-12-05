@@ -28,6 +28,12 @@ impl PieceInputSystem {
         }
     }
 
+    /* Sometimes when user want to spam the button for faster action,
+    and we do not want them to break our game.
+
+    Parallel system will work on their own but the rendering might not be able to handle them.
+    Also, it is a cheating move so this function prevent them from doing that.
+    */
     fn action_no_spam(&mut self, input: &InputHandler<StringBindings>, name: &str) -> bool {
         let contains = self.last_actions.contains(name);
         let action = input.action_is_down(name).unwrap_or(false);
@@ -42,6 +48,10 @@ impl PieceInputSystem {
         action
     }
 
+    /**
+    Remember when the for loop runs, it runs super fast! Here we use the delta_seconds to measure
+    how far we want the user to move.
+    */
     fn action_with_timer<T: PartialEq>(
         &mut self,
         time: &Time,
@@ -69,6 +79,10 @@ impl PieceInputSystem {
         }
     }
 
+    /*
+    Of course, once we found that there are any dropped piece that collides. We can avoid so illegal moves.
+    This can be further improved into kick detection where player can do tricky moves.
+    */
     fn position_collides(piece: &Piece, position: &Position, dropped_pieces: &[Position]) -> bool {
         for self_pos in piece.get_filled_positions(&position) {
             let outside_bounds =
@@ -82,6 +96,10 @@ impl PieceInputSystem {
         false
     }
 
+    /*
+    Hard drop is the function that send the user down to the floor immediately and we will let the drop system
+    handle what to do next.
+    */
     fn hard_drop(piece: &Piece, position: &mut Position, dropped_positions: &[Position]) {
         let down_collides = |pos: &Position| {
             let down_pos = Position {
@@ -112,17 +130,22 @@ impl<'s> System<'s> for PieceInputSystem {
         &mut self,
         (mut pieces, mut dropped_pieces, mut positions, input, mut reset_channel, time): Self::SystemData,
     ) {
+
         let dropped_positions = (&mut dropped_pieces, &mut positions)
             .join()
             .map(|(_, pos)| *pos)
             .collect::<Vec<_>>();
 
+        // let's move those pieces
         for (piece, position) in (&mut pieces, &mut positions).join() {
+
+            // Make sure it is no spam, the hard drop
             if self.action_no_spam(&*input, &"drop_hard".to_string()) {
                 Self::hard_drop(piece, position, &dropped_positions);
             }
 
             let movement_input = input.axis_value("move_x").unwrap_or(0.0);
+            // Move it according to the move_x value
             let movement = self.action_with_timer(&*time, 0.08, "move_x", movement_input, 0.0);
 
             let soft_drop_input = input.action_is_down("drop_soft").unwrap_or(false);
@@ -139,6 +162,7 @@ impl<'s> System<'s> for PieceInputSystem {
                 rotation: piece.rotation,
             };
 
+            // Make sure that the rotation is in order
             let rotated = self.action_no_spam(&*input, &"rotate_cw".to_string());
             let rotated_ccw = self.action_no_spam(&*input, &"rotate_ccw".to_string());
 
@@ -150,14 +174,17 @@ impl<'s> System<'s> for PieceInputSystem {
                 continue;
             }
 
+            // if collision occurs, the piece cannot move. We can turn this into SRS later.
             if Self::position_collides(&new_piece, &new_position, &dropped_positions) {
                 continue;
             }
 
+            // Let's reset the time and keep the up with the change
             if position.row != new_position.row {
                 reset_channel.single_write(ResetFallTimerEvent {});
             }
 
+            // Change position, rotation
             position.row = new_position.row;
             position.col = new_position.col;
             piece.rotation = new_piece.rotation;

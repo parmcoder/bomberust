@@ -63,7 +63,7 @@ fn main() -> amethyst::Result<()> {
         .with(DroppingSystem::new(), "piece_drop_system", &[])
         .with(PieceSpawnSystem::new(), "piece_spawn_system", &[])
         .with(LineClearSystem::new(), "line_clear_system", &[])
-        .with(RenderSystem::new(), "render_system", &[])
+        .with(RenderSystem, "render_system", &[])
         .with_system_desc(
             DjSystemDesc::new(|music: &mut Music| music.music.next()),
             "dj_system",
