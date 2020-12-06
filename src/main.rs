@@ -35,6 +35,9 @@ fn main() -> amethyst::Result<()> {
     let display_config = app_root.join("config/display_config.ron");
     let key_bindings_path = app_root.join("config/input.ron");
 
+    /* Here is how we make everything run together.
+    with_bundle will take all the systems and run those systems in parallel
+    */
     let game_data = GameDataBuilder::default()
         .with_bundle(TransformBundle::new())?
         .with_bundle(
@@ -67,7 +70,6 @@ fn main() -> amethyst::Result<()> {
             &[],
         );
 
-    // let mut game = Application::new(resources, state::MyState, game_data)?;
     let mut game = Application::new(resources, state::GameState, game_data)?;
     game.run();
 

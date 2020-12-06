@@ -19,10 +19,12 @@ impl Component for PieceImage {
     type Storage = DenseVecStorage<Self>;
 }
 
+//Rendering also require a system
 #[derive(SystemDesc)]
 pub struct RenderSystem;
 
 impl RenderSystem {
+    // we have this to draw a crossed square, it is used for debugging
     fn draw_crossed_square(
         &self,
         debug_line: &mut DebugLinesComponent,
@@ -73,10 +75,12 @@ impl<'s> System<'s> for RenderSystem {
             mut tints,
         ): Self::SystemData,
     ) {
+        // Remove every tiles
         for (_, entity) in (&mut pieces_placed, &*entities).join() {
             entities.delete(entity).unwrap();
         }
 
+        // draw it again from the new piece
         for (piece, position) in (&pieces, &positions).join() {
             for self_pos in piece.get_filled_positions(position) {
                 let sprite_render = SpriteRender {

@@ -4,7 +4,6 @@ use amethyst::assets::{Handle, AssetStorage};
 use amethyst::core::ecs::{
     Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
 };
-use amethyst::derive::SystemDesc;
 
 use amethyst::core::{Time, Transform};
 use amethyst::renderer::resources::Tint;
@@ -16,9 +15,9 @@ use crate::audio::{play_drop_sound, Sounds};
 use amethyst::audio::Source;
 use amethyst::audio::output::Output;
 
-const FALL_TIMER: f32 = 0.4;
+use crate::constants::FALL_TIMER;
 
-// #[derive(SystemDesc)]
+// This is how a piece should drop
 pub struct DroppingSystem {
     fall_timer: f32, // Seconds until next step down
     reader_id: Option<ReaderId<ResetFallTimerEvent>>,
@@ -33,6 +32,8 @@ impl DroppingSystem {
     }
 }
 impl<'s> System<'s> for DroppingSystem {
+
+    // There are plenty of data we need to use
     type SystemData = (
         ReadStorage<'s, Piece>,
         WriteStorage<'s, DroppedPiece>,
@@ -77,19 +78,26 @@ impl<'s> System<'s> for DroppingSystem {
 
         self.fall_timer -= time.delta_seconds();
 
+        // Wait until the next fall, if the time has come, then do these...
         if self.fall_timer <= 0.0 {
+
+            // reset the fall timer, so that we can move it again
             self.fall_timer = FALL_TIMER;
 
+            // get the data of dropped pieces
             let dropped_positions = (&mut dropped_pieces, &mut positions)
                 .join()
                 .map(|(_, pos)| *pos)
                 .collect::<Vec<_>>();
 
+            // prepare this vector for our next drop pieces
             let mut last_dropped_pieces = Vec::<(DroppedPiece, Position)>::new();
 
+            // we are gonna check if dropping pieces will collide or not
             for (entity, piece, position) in (&*entities, &pieces, &mut positions).join() {
                 let mut collide = false;
 
+                // check collision, whether there is any piece below or reached the floor
                 for self_pos in piece.get_filled_positions(position) {
                     if self_pos.row == 0 {
                         collide = true;
@@ -107,6 +115,7 @@ impl<'s> System<'s> for DroppingSystem {
                     }
                 }
 
+                // if collision occur, then just say that we have landed the piece here.
                 if collide {
                     for new_dropped_pos in piece.get_filled_positions(position) {
                         last_dropped_pieces
@@ -121,6 +130,7 @@ impl<'s> System<'s> for DroppingSystem {
                 }
             }
 
+            // for every pieces we have landed, we need to draw it. The rendering system cannot interfere.
             for (new_dropped_piece, new_pos) in last_dropped_pieces {
                 let sprite_render = SpriteRender {
                     sprite_sheet: sprite_sheet_handle.clone(),
