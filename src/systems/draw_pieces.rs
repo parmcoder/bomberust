@@ -3,14 +3,14 @@ use crate::entities::{Piece, Position};
 use amethyst::assets::Handle;
 use amethyst::core::ecs::{Component, DenseVecStorage, Entities, ReadExpect};
 use amethyst::core::Transform;
-use amethyst::renderer::palette::Srgba;
+// use amethyst::renderer::palette::Srgba;
 use amethyst::renderer::resources::Tint;
 use amethyst::renderer::{SpriteRender, SpriteSheet};
 use amethyst::{
-    core::math::{Point2, Point3, Vector3},
+    core::math::Vector3,
+    // core::math::{Point2, Point3, Vector3},
     derive::SystemDesc,
     ecs::prelude::{Join, ReadStorage, System, SystemData, WriteStorage},
-    renderer::debug_drawing::DebugLinesComponent,
 };
 
 pub struct PieceImage;
@@ -25,29 +25,29 @@ pub struct RenderSystem;
 
 impl RenderSystem {
     // we have this to draw a crossed square, it is used for debugging
-    fn draw_crossed_square(
-        &self,
-        debug_line: &mut DebugLinesComponent,
-        position: &Position,
-        color: Srgba,
-    ) {
-        debug_line.add_rectangle_2d(
-            Point2::new(position.col as f32, position.row as f32),
-            Point2::new((position.col + 1) as f32, (position.row + 1) as f32),
-            0.0,
-            color,
-        );
-        debug_line.add_line(
-            Point3::new(position.col as f32, position.row as f32, 0.0),
-            Point3::new((position.col + 1) as f32, (position.row + 1) as f32, 0.0),
-            color,
-        );
-        debug_line.add_line(
-            Point3::new(position.col as f32, (position.row + 1) as f32, 0.0),
-            Point3::new((position.col + 1) as f32, position.row as f32, 0.0),
-            color,
-        );
-    }
+    // fn draw_crossed_square(
+    //     &self,
+    //     debug_line: &mut DebugLinesComponent,
+    //     position: &Position,
+    //     color: Srgba,
+    // ) {
+    //     debug_line.add_rectangle_2d(
+    //         Point2::new(position.col as f32, position.row as f32),
+    //         Point2::new((position.col + 1) as f32, (position.row + 1) as f32),
+    //         0.0,
+    //         color,
+    //     );
+    //     debug_line.add_line(
+    //         Point3::new(position.col as f32, position.row as f32, 0.0),
+    //         Point3::new((position.col + 1) as f32, (position.row + 1) as f32, 0.0),
+    //         color,
+    //     );
+    //     debug_line.add_line(
+    //         Point3::new(position.col as f32, (position.row + 1) as f32, 0.0),
+    //         Point3::new((position.col + 1) as f32, position.row as f32, 0.0),
+    //         color,
+    //     );
+    // }
 }
 
 impl<'s> System<'s> for RenderSystem {

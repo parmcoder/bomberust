@@ -4,7 +4,6 @@ use amethyst::{
     renderer::palette::rgb::Srgba,
 };
 
-use amethyst::core::ecs::rayon::iter::{IntoParallelIterator, IntoParallelRefMutIterator};
 use rand::distributions::Standard;
 use rand::prelude::Distribution;
 use rand::Rng;
