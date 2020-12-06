@@ -150,7 +150,7 @@ impl<'s> System<'s> for PieceInputSystem {
 
             let soft_drop_input = input.action_is_down("drop_soft").unwrap_or(false);
             let soft_drop =
-                self.action_with_timer(&*time, 0.14, "drop_soft", soft_drop_input, false);
+                self.action_with_timer(&*time, 0.1, "drop_soft", soft_drop_input, false);
 
             let new_position = Position {
                 row: position.row - soft_drop as i8,
