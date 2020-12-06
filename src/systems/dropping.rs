@@ -2,7 +2,7 @@ use crate::entities::{DroppedPiece, Piece, Position};
 use crate::events::{PieceLandEvent, ResetFallTimerEvent};
 use amethyst::assets::{Handle, AssetStorage};
 use amethyst::core::ecs::{
-    Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, World, Write, WriteStorage,
+    Entities, Join, Read, ReadExpect, ReadStorage, ReaderId, System, Write, WriteStorage,
 };
 
 use amethyst::core::{Time, Transform};

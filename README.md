@@ -1,7 +1,7 @@
 # RUSTRIS
 This is a term project for my ICCS311-T1-2021.
 
-![alt text](medias/demo.gif)
+[comment]: <> (![alt text]&#40;&#41;)
 
 
 #### Objectives
