@@ -1,6 +1,9 @@
 # RUSTRIS
 This is a term project for my ICCS311-T1-2021.
 
+![alt text](medias/demo.gif)
+
+
 #### Objectives
 1. To apply the concept of parallelism and concurrency using amethyst game engine.
 2. To study how tetris works and practice coding in rust
