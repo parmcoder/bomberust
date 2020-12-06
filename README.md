@@ -46,6 +46,24 @@ So far, the performance from using this engine is amazing, and it is light-weigh
 This is the showcase that people are working on https://vimeo.com/332649771.
 
 For this project, the game runs smoothly and it starts very quickly once compiled.
+Moreover, it uses around 0.4% of my RAM and 21.7% of the CPU. For a small game, 
+it took only 1-2 MB of my Virtual memory. So, Rust can maximize the usage given small resources,
+and that amazed me. I was not expecting this game to be that light-weighted and the sound system
+is not buggy unlike my previous java game (Check my repo, it is called bait and sold).
+
+![alt text](medias/memused.gif)
+
+Compared to that Java, java games will be easier to manage than Rust due to its flexibility,
+but the trade-off is the memory consumption of a java application. Nowadays, memory is abundant
+and people do not care much about it, except us, game developers. Every byte must not be wasted,
+and we should save as many space as possible.
+
+Moreover, parallelism in Rust is better than Java, much better. Since I can just run this code, 
+and the compiler knows where I messed up, the time I spent on debugging decreased by a lot.
+Though Java is easier to learn, Rust is like a perfectionist that expect me to make my code beautiful
+and safe.
+
+
 
 #### How is this related to parallel programming?
 Well, Modularity, Parallelism, and Data-driven are provided from the engine.

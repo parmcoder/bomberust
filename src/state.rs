@@ -1,14 +1,12 @@
 use amethyst::{
     assets::{AssetStorage, Loader},
     core::transform::Transform,
-    input::{get_key, is_close_requested, is_key_down, VirtualKeyCode},
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
     ui::{
-        Anchor, FontHandle, LineMode, Stretch, TtfFormat, UiButtonBuilder, UiImage, UiText,
+        Anchor, FontHandle, LineMode, TtfFormat, UiImage, UiText,
         UiTransform,
     },
-    window::ScreenDimensions,
 };
 
 use crate::audio::initialise_audio;
@@ -17,7 +15,6 @@ use crate::entities::{Piece, PieceType, Position};
 use crate::events::PieceLandEvent;
 use amethyst::core::ecs::shrev::EventChannel;
 use amethyst::renderer::debug_drawing::DebugLinesComponent;
-use log::info;
 
 #[derive(Default)]
 pub struct GameState;
@@ -99,7 +96,7 @@ impl SimpleState for GameState {
 /// This is the pure code only way to create UI with amethyst.
 pub fn create_ui(world: &mut World) {
     // this creates the simple pink background UI element.
-    let ui_background = world
+    world
         .create_entity()
         .with(UiImage::SolidColor([0.6, 0.1, 0.2, 1.0]))
         .with(UiTransform::new(
@@ -150,8 +147,8 @@ pub fn create_ui(world: &mut World) {
     for (x, y) in [
         (-200.0, "How to play"),
         (-240.0, "WASD - move"),
-        (-280.0, "K - rotate ccw"),
-        (-320.0, "J - rotate cw"),
+        (-280.0, "K - rotate cw"),
+        (-320.0, "J - rotate ccw"),
     ]
     .iter()
     {

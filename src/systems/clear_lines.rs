@@ -68,9 +68,7 @@ impl<'s> System<'s> for LineClearSystem {
             .reader_id
             .get_or_insert_with(|| land_channel.register_reader());
 
-        /**
-        Keep reading the land channel for any changes.
-        */
+        //Keep reading the land channel for any changes.
         for _ in land_channel.read(reader_id) {
             let mut drop_pos_row = HashMap::new();
 
